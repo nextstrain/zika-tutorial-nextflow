@@ -1,7 +1,10 @@
 #!/usr/bin/env nextflow
 
-sequences = file('data/sequences.fasta')
-metadata = file('data/metadata.tsv')
+params.sequences = "data/sequences.fasta"
+sequences = file(params.sequences)
+params.metadata = "data/metadata.tsv"
+metadata = file(params.metadata)
+
 exclude = file('config/dropped_strains.txt')
 reference = file('config/zika_outgroup.gb')
 colors = file('config/colors.tsv')
