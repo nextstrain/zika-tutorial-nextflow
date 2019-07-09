@@ -8,8 +8,10 @@ build/
 # Sensitive environment variables
 environment*
 
-# Snakemake state dir
-/.snakemake
+# Nextflow
+/.nextflow*
+nextflow*
+work/
 
 # Local config overrides
 /config_local.yaml
