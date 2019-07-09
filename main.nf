@@ -10,6 +10,8 @@ auspice_config = file ('config/auspice_config.json')
 
 process filter {
 
+    publishDir("results/")
+
     input:
     file 'sequences.fasta' from sequences
     file 'metadata.tsv' from metadata
@@ -34,6 +36,8 @@ process filter {
 
 process align {
 
+    publishDir("results/")
+
     input:
     file 'filtered.fasta' from filtered
     file 'reference.gb' from reference
@@ -54,6 +58,8 @@ process align {
 
 process tree {
 
+    publishDir("results/")
+
     input:
     file 'aligned.fasta' from aligned
 
@@ -70,6 +76,8 @@ process tree {
 }
 
 process refine {
+
+    publishDir("results/")
 
     input:
     file 'tree_raw.nwk' from tree_raw
@@ -99,6 +107,8 @@ process refine {
 
 process ancestral {
 
+    publishDir("results/")
+
     input:
     file 'tree.nwk' from tree
     file 'aligned.fasta' from aligned
@@ -118,6 +128,8 @@ process ancestral {
 }
 
 process translate {
+
+    publishDir("results/")
 
     input:
     file 'tree.nwk' from tree
@@ -140,6 +152,8 @@ process translate {
 
 process traits {
 
+    publishDir("results/")
+
     input:
     file 'tree.nwk' from tree
     file 'metadata.tsv' from metadata
@@ -160,6 +174,8 @@ process traits {
 }
 
 process export {
+
+    publishDir("auspice/", mode: 'copy')
 
     input:
     file 'tree.nwk' from tree
@@ -190,44 +206,3 @@ process export {
     """
 
 }
-
-
-filtered
-  .collectFile(name: 'results/filtered.fasta', newLine: true)
-  .println { "Filtered FASTA saved to file: $it" }
-
-aligned
-  .collectFile(name: 'results/aligned.fasta', newLine: true)
-  .println { "Aligned FASTA saved to file: $it" }
-
-tree_raw
-  .collectFile(name: 'results/tree_raw.nwk', newLine: true)
-  .println { "Raw Newick tree saved to file: $it" }
-
-tree
-  .collectFile(name: 'results/tree.nwk', newLine: true)
-  .println { "Refined Newick tree saved to file: $it" }
-
-branch_lengths
-  .collectFile(name: 'results/branch_lengths.json', newLine: true)
-  .println { "Branch lengths node JSON saved to file: $it" }
-
-nt_muts
-  .collectFile(name: 'results/nt_muts.json', newLine: true)
-  .println { "Nucleotide mutations node JSON saved to file: $it" }
-
-aa_muts
-  .collectFile(name: 'results/aa_muts.json', newLine: true)
-  .println { "Amino acid mutations node JSON saved to file: $it" }
-
-traits
-  .collectFile(name: 'results/traits.json', newLine: true)
-  .println { "Traits node JSON saved to file: $it" }
-
-auspice_tree
-  .collectFile(name: 'auspice/zika_tree.json', newLine: true)
-  .println { "Auspice tree JSON saved to file: $it" }
-
-auspice_meta
-  .collectFile(name: 'auspice/zika_meta.json', newLine: true)
-  .println { "Auspice meta JSON saved to file: $it" }  
