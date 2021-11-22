@@ -1,211 +1,43 @@
 #!/usr/bin/env nextflow
 
-params.sequences = "data/sequences.fasta"
-sequences = file(params.sequences)
-params.metadata = "data/metadata.tsv"
-metadata = file(params.metadata)
+nextflow.enable.dsl=2
 
-exclude = file('config/dropped_strains.txt')
-reference = file('config/zika_outgroup.gb')
-colors = file('config/colors.tsv')
-lat_longs = file('config/lat_longs.tsv')
-auspice_config = file ('config/auspice_config.json')
+// == Import reusable modules
+include {index; filter; align; tree; refine; ancestral; translate; traits; export } from './modules/augur.nf'
+// include any preprocessing modules, can add a flag for different viruses, can add default references for different viruses
 
-process filter {
+// ===== MAIN WORKFLOW ========//
 
-    publishDir("results/")
+workflow {
+    // Define input channels (could auto detect if input is gisaid auspice json file)
+    seq_ch = Channel.fromPath(params.sequences, checkIfExists:true)
+    met_ch = Channel.fromPath(params.metadata, checkIfExists:true)
+    exclude_ch = Channel.fromPath(params.exclude, checkIfExists:true)
+    ref_ch = Channel.fromPath(params.reference, checkIfExists:true)
+    colors_ch = Channel.fromPath(params.colors, checkIfExists:true)
+    lat_longs_ch = Channel.fromPath(params.lat_longs, checkIfExists:true)
+    auspice_config_ch = Channel.fromPath(params.auspice_config, checkIfExists:true)
 
-    input:
-    file 'sequences.fasta' from sequences
-    file 'metadata.tsv' from metadata
-    file 'dropped_strains.txt' from exclude
+    // === Preprocessing could go here, scripts can go into the bin folder
 
-    output:
-    file 'filtered.fasta' into filtered
+    // Run pipeline (chain together processes and add other params on the way)
+    seq_ch | index |                                       // INDEX
+      combine(met_ch) | combine(exclude_ch) | filter |     // FILTER
+      combine(ref_ch ) | align |                           // ALIGN
+      tree |                                               // TREE
+      combine(align.out) | combine(met_ch) | refine        // REFINE
 
-    script:
-    """
-    augur filter \
-        --sequences sequences.fasta \
-        --metadata metadata.tsv \
-        --exclude dropped_strains.txt \
-        --output filtered.fasta \
-        --group-by country year month \
-        --sequences-per-group 20 \
-        --min-date 2012
-    """
+    tree_ch = refine.out | map{n-> n.get(0)}
+    bl_ch = refine.out | map{n-> n.get(1)}
 
-}
+    tree_ch | combine(align.out) | ancestral                // ANCESTRAL
 
-process align {
+    tree_ch | combine(ancestral.out) | combine(ref_ch) | translate  // TRANSLATE
 
-    publishDir("results/")
+    tree_ch | combine(met_ch) | traits                       // TRAITS
 
-    input:
-    file 'filtered.fasta' from filtered
-    file 'reference.gb' from reference
-
-    output:
-    file 'aligned.fasta' into aligned
-
-    script:
-    """
-    augur align \
-        --sequences filtered.fasta \
-        --reference-sequence reference.gb \
-        --output aligned.fasta \
-        --fill-gaps
-    """
-
-}
-
-process tree {
-
-    publishDir("results/")
-
-    input:
-    file 'aligned.fasta' from aligned
-
-    output:
-    file 'tree_raw.nwk' into tree_raw
-
-    script:
-    """
-    augur tree \
-        --alignment aligned.fasta \
-        --output tree_raw.nwk
-    """
-
-}
-
-process refine {
-
-    publishDir("results/")
-
-    input:
-    file 'tree_raw.nwk' from tree_raw
-    file 'aligned.fasta' from aligned
-    file 'metadata.tsv' from metadata
-
-    output:
-    file 'tree.nwk' into tree
-    file 'branch_lengths.json' into branch_lengths
-
-    script:
-    """
-    augur refine \
-        --tree tree_raw.nwk \
-        --alignment aligned.fasta \
-        --metadata metadata.tsv \
-        --output-tree tree.nwk \
-        --output-node-data branch_lengths.json \
-        --timetree \
-        --coalescent opt \
-        --date-confidence \
-        --date-inference marginal \
-        --clock-filter-iqd 4
-    """
-
-}
-
-process ancestral {
-
-    publishDir("results/")
-
-    input:
-    file 'tree.nwk' from tree
-    file 'aligned.fasta' from aligned
-
-    output:
-    file 'nt_muts.json' into nt_muts
-
-    script:
-    """
-    augur ancestral \
-        --tree tree.nwk \
-        --alignment aligned.fasta \
-        --output nt_muts.json \
-        --inference joint
-    """
-
-}
-
-process translate {
-
-    publishDir("results/")
-
-    input:
-    file 'tree.nwk' from tree
-    file 'nt_muts.json' from nt_muts
-    file 'reference.gb' from reference
-
-    output:
-    file 'aa_muts.json' into aa_muts
-
-    script:
-    """
-    augur translate \
-        --tree tree.nwk \
-        --ancestral-sequences nt_muts.json \
-        --reference-sequence reference.gb \
-        --output aa_muts.json
-    """
-
-}
-
-process traits {
-
-    publishDir("results/")
-
-    input:
-    file 'tree.nwk' from tree
-    file 'metadata.tsv' from metadata
-
-    output:
-    file 'traits.json' into traits
-
-    script:
-    """
-    augur traits \
-        --tree tree.nwk \
-        --metadata metadata.tsv \
-        --output traits.json \
-        --columns region country \
-        --confidence
-    """
-
-}
-
-process export {
-
-    publishDir("auspice/", mode: 'copy')
-
-    input:
-    file 'tree.nwk' from tree
-    file 'metadata.tsv' from metadata
-    file 'branch_lengths.json' from branch_lengths
-    file 'traits.json' from traits
-    file 'nt_muts.json' from nt_muts
-    file 'aa_muts.json' from aa_muts
-    file 'colors.tsv' from colors
-    file 'lat_longs.tsv' from lat_longs
-    file 'auspice_config.json' from auspice_config
-
-    output:
-    file 'tree.json' into auspice_tree
-    file 'meta.json' into auspice_meta
-
-    script:
-    """
-    augur export \
-        --tree tree.nwk \
-        --metadata metadata.tsv \
-        --node-data branch_lengths.json traits.json nt_muts.json aa_muts.json \
-        --colors colors.tsv \
-        --lat-longs lat_longs.tsv \
-        --auspice-config auspice_config.json \
-        --output-tree tree.json \
-        --output-meta meta.json
-    """
+    tree_ch | combine(met_ch) | combine(bl_ch) | 
+      combine(traits.out) | combine(ancestral.out) | combine(translate.out) | combine(colors_ch) | 
+      combine(lat_longs_ch) | combine(auspice_config_ch) | export   // EXPORT
 
 }
