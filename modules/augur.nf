@@ -3,7 +3,7 @@
 nextflow.enable.dsl=2
 
 process index {
-    publishDir("$params.outdir")
+    publishDir "$params.outdir", mode: 'copy'
     input: path(sequences)
     output: tuple path("$sequences"), path("sequence_index.tsv")
     script:
@@ -16,8 +16,7 @@ process index {
 }
 
 process filter {
-    publishDir("$params.outdir")
-
+    publishDir "$params.outdir", mode: 'copy'
     input: tuple path(sequences), path(sequence_index), path(metadata), path(exclude)
  //   file 'sequences.fasta' from sequences
  //   file 'metadata.tsv' from metadata
@@ -38,12 +37,10 @@ process filter {
         --sequences-per-group 20 \
         --min-date 2012
     """
-
 }
 
 process align {
-    publishDir("$params.outdir")
-
+    publishDir "$params.outdir", mode: 'copy'
     input: tuple path(filtered), path(reference)
 //    file 'filtered.fasta' from filtered
 //    file 'reference.gb' from reference
@@ -59,12 +56,10 @@ process align {
         --output aligned.fasta \
         --fill-gaps
     """
-
 }
 
 process tree {
-    publishDir("$params.outdir")
-
+    publishDir "$params.outdir", mode: 'copy'
     input: path(aligned)
 //    file 'aligned.fasta' from aligned
 
@@ -77,12 +72,10 @@ process tree {
         --alignment ${aligned} \
         --output ${aligned.simpleName}.nwk
     """
-
 }
 
 process refine {
-    publishDir("$params.outdir")
-
+    publishDir "$params.outdir", mode: 'copy'
     input: tuple path(tree_raw), path(aligned), path(metadata)
 //    file 'tree_raw.nwk' from tree_raw
 //    file 'aligned.fasta' from aligned
@@ -109,8 +102,7 @@ process refine {
 }
 
 process ancestral {
-    publishDir("$params.outdir")
-
+    publishDir "$params.outdir", mode: 'copy'
     input: tuple path(tree), path(aligned)
 //    file 'tree.nwk' from tree
 //    file 'aligned.fasta' from aligned
@@ -130,8 +122,7 @@ process ancestral {
 }
 
 process translate {
-    publishDir("$params.outdir")
-
+    publishDir "$params.outdir", mode: 'copy'
     input: tuple path(tree), path(nt_muts), path(reference)
 //    file 'tree.nwk' from tree
 //    file 'nt_muts.json' from nt_muts
@@ -152,8 +143,7 @@ process translate {
 }
 
 process traits {
-    publishDir("$params.outdir")
-
+    publishDir "$params.outdir", mode: 'copy'
     input: tuple path(tree), path(metadata)
     //file 'tree.nwk' from tree
     //file 'metadata.tsv' from metadata
@@ -173,8 +163,7 @@ process traits {
 }
 
 process export {
-    publishDir("$params.outdir")
-
+    publishDir "$params.outdir", mode: 'copy'
     input: tuple path(tree), path(metadata), path(branch_lengths), \
       path(traits), path(nt_muts), path(aa_muts), path(colors), \
       path(lat_longs), path(auspice_config)
@@ -207,8 +196,4 @@ process export {
         --auspice-config ${auspice_config} \
         --output auspice/${tree.simpleName}.json
     """
-//        --output tree_meta_finalout.json
 }
-
-// --output-tree tree.json \
-// --output-meta meta.json
