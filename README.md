@@ -26,15 +26,16 @@ See `main.nf` for full details.
 To run the workflow:
 
 ```
-# creates a "nextflow" executable
-curl -s https://get.nextflow.io | bash
+# (1) Install nextstrain or activate the nextstrain conda environment
+conda activate nextstrain
 
-# install augur, nextstrain
+# (2) Install nextflow via conda or mamba
+conda install -c bioconda nextflow
 
-# place the input files in the current directory in a "data" folder
+# (3) Place the input files in the current directory in a "data" folder
 
-# run pipeline on a set of input files
-./nextflow run j23414/zika-tutorial-nextflow \
+# (4) Run pipeline on a set of input files
+nextflow run nextstrain/zika-tutorial-nextflow \
          --sequences "data/sequences.fasta" \
          --metadata "data/metadata.tsv" \
          --colors "data/colors.tsv" \
@@ -45,7 +46,7 @@ curl -s https://get.nextflow.io | bash
          --reference "data/zika_outgroup.gb" \
          -resume
 
-#> Launching `j23414/zika-tutorial-nextflow` [loving_heyrovsky] - revision: fedd37a247 [master]
+#> Launching `nextstrain/zika-tutorial-nextflow` [loving_heyrovsky] - revision: fedd37a247 [master]
 #> executor >  local (9)
 #> [ce/f98d1c] process > index (1)     [100%] 1 of 1 ✔
 #> [15/87647b] process > filter (1)    [100%] 1 of 1 ✔
