@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-nextflow run j23414/zika-tutorial-nextflow \
+nextflow run nextstrain/zika-tutorial-nextflow \
  --sequences "data/sequences.fasta" \
  --metadata "data/metadata.tsv" \
  --colors "data/colors.tsv" \

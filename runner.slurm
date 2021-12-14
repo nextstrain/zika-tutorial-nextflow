@@ -23,7 +23,7 @@ conda activate /home/${USER}/miniconda3/envs/nextstrain
 cd ${SLURM_SUBMIT_DIR}
 
 # === Main Program
-nextflow run j23414/zika-tutorial-nextflow \
+nextflow run nextstrain/zika-tutorial-nextflow \
 	 --sequences "data/sequences.fasta" \
 	 --metadata "data/metadata.tsv" \
 	 --colors "data/colors.tsv" \
