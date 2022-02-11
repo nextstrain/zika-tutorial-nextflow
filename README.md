@@ -97,7 +97,7 @@ Nextflow can generate a DAG of the pipeline, although Nextflow's isn't as easy t
 
 <details><summary>See dag.png</summary>
 
-![](dag.png)
+![](docs/dag.png)
 
 </details>
 
