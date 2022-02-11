@@ -13,11 +13,17 @@ As a potential joint effort, the [nf-core](https://nf-co.re/) community attempts
 Augur commands were wrapped in processes (similar to Snakemake's rules) and placed in the `modules/augur.nf`. Nextflow processes were imported into `main.nf` and connected via Nextflow channels.
 
 ```
-sequence_ch | index |                                       // INDEX
-  combine(metadata_ch) | combine(exclude_ch) | filter |     // FILTER
-  combine(reference_ch ) | align |                         // ALIGN
-  tree |                                                   // TREE
-  combine(align.out) | combine(metadata_ch) | refine        // REFINE
+sequence_ch 
+ | index                   // INDEX
+ | combine(metadata_ch) 
+ | combine(exclude_ch) 
+ | filter                  // FILTER
+ | combine(reference_ch ) 
+ | align                   // ALIGN
+ | tree                    // TREE
+ | combine(align.out) 
+ | combine(metadata_ch) 
+ | refine                  // REFINE
 ...
 ```
 
@@ -46,35 +52,41 @@ nextflow run nextstrain/zika-tutorial-nextflow \
          --reference "data/zika_outgroup.gb" \
          -resume
 
-#> Launching `nextstrain/zika-tutorial-nextflow` [loving_heyrovsky] - revision: fedd37a247 [master]
+#> N E X T F L O W  ~  version 21.10.6
+#> Launching `main.nf` [maniac_hypatia] - revision: d136460fdb
 #> executor >  local (9)
-#> [ce/f98d1c] process > index (1)     [100%] 1 of 1 ✔
-#> [15/87647b] process > filter (1)    [100%] 1 of 1 ✔
-#> [20/92369c] process > align (1)     [100%] 1 of 1 ✔
-#> [73/fc578a] process > tree (1)      [100%] 1 of 1 ✔
-#> [d3/d159ed] process > refine (1)    [100%] 1 of 1 ✔
-#> [64/8b7613] process > ancestral (1) [100%] 1 of 1 ✔
-#> [06/5afae1] process > translate (1) [100%] 1 of 1 ✔
-#> [93/1bbdc9] process > traits (1)    [100%] 1 of 1 ✔
-#> [6a/592d90] process > export (1)    [100%] 1 of 1 ✔
-#> Completed at: 24-Nov-2021 17:54:59
-#> Duration    : 1m 3s
+#> [69/fb06ea] process > index (1)     [100%] 1 of 1 ✔
+#> [14/54db50] process > filter (1)    [100%] 1 of 1 ✔
+#> [c7/1a6fc7] process > align (1)     [100%] 1 of 1 ✔
+#> [68/c3cfc9] process > tree (1)      [100%] 1 of 1 ✔
+#> [1e/1d2fd1] process > refine (1)    [100%] 1 of 1 ✔
+#> [f4/813036] process > ancestral (1) [100%] 1 of 1 ✔
+#> [52/02e75d] process > translate (1) [100%] 1 of 1 ✔
+#> [b7/55d75f] process > traits (1)    [100%] 1 of 1 ✔
+#> [71/98c68b] process > export (1)    [100%] 1 of 1 ✔
+#> WARN: Task runtime metrics are not reported when using macOS without a container engine
+#> Completed at: 11-Feb-2022 10:54:14
+#> Duration    : 1m 23s
 #> CPU hours   : (a few seconds)
 #> Succeeded   : 9
+```
 
-ls -1 results
+The output folder should look like:
 
-#> aa_muts.json
-#> aligned.fasta
-#> aligned.nwk
-#> auspice/tree.json     #<= this one
-#> branch_lengths.json
-#> filtered.fasta
-#> nt_muts.json
-#> sequence_index.tsv
-#> sequences.fasta
-#> traits.json
-#> tree.nwk
+```
+results/
+|_ 01_Index/          #<= contains output files for each step
+|_ 02_Filter/
+|_ 03_Align/
+|_ 04_Tree/
+|_ 05_Refine/
+|_ 06_Ancestral/
+|_ 07_Translate/
+|_ 08_Traits/
+|_ auspice/           #<= Final files! Use "nextstrain view results/auspice"
+|
+|_ report.html
+|_ timeline.html      #<= runtime and memory use at each step
 ```
 
 Based on Nextflow's timeline, the `refine` step seems to take the longest.
@@ -89,6 +101,8 @@ Nextflow can generate a DAG of the pipeline, although Nextflow's isn't as easy t
 
 </details>
 
+<!--
+
 ## Next steps
 
 There are probably many more complicated pre-processing steps in the Snakemake file, and other difficult use cases:
@@ -102,3 +116,4 @@ Other tasks may include:
 * Incorporating data pre-processing steps
 
 Other workflow languages include [WDL from the Broad Institute](https://github.com/broadinstitute/cromwell) which runs on Cromwell execution engine. A [WDL instance of the zika pipeline](https://github.com/nextstrain/zika-tutorial/tree/wdl) was created by huddlej.  
+-->
