@@ -23,43 +23,56 @@ workflow {
     // === Preprocessing could go here, scripts can go into the bin folder
 
     // Run pipeline (chain together processes and add other params on the way)
-    seq_ch 
+    channel.of("zika")
+      | combine(seq_ch)
       | index                 // INDEX
       | combine(met_ch) 
       | combine(exclude_ch) 
+      | combine(channel.of("--group-by country year month --sequences-per-group 20 --min-date 2012"))
       | filter                // FILTER
-      | combine(ref_ch ) 
+      | combine(ref_ch )
+      | combine(channel.of("--fill-gaps"))
       | align                 // ALIGN
+      | combine(channel.of(""))
       | tree                  // TREE
-      | combine(align.out) 
-      | combine(met_ch) 
+      | join(align.out) 
+      | combine(met_ch)
+      | combine(channel.of("--timetree --coalescent opt --date-confidence --date-inference marginal --clock-filter-iqd 4")) 
       | refine                // REFINE
 
     // split augur refine's output into tree and branch length files
-    tree_ch = refine.out | map{ n-> n.get(0) }
-    bl_ch = refine.out | map{ n-> n.get(1) }
+    tree_ch = refine.out 
+      | map { n-> [n.get(0), n.get(1)] }
+
+    branch_length_ch = refine.out 
+      | map{ n-> [n.get(0), n.get(2)] }
 
     tree_ch 
-      | combine(align.out) 
+      | join(align.out) 
+      | combine(channel.of("--inference joint"))
       | ancestral             // ANCESTRAL
 
     tree_ch 
-      | combine(ancestral.out) 
+      | join(ancestral.out) 
       | combine(ref_ch) 
       | translate             // TRANSLATE
 
     tree_ch 
       | combine(met_ch) 
+      | combine(channel.of("--columns region country --confidence"))
       | traits                // TRAITS
 
-    tree_ch 
-      | combine(met_ch) 
-      | combine(bl_ch) 
-      | combine(traits.out) 
-      | combine(ancestral.out) 
-      | combine(translate.out) 
+    node_data_ch = branch_length_ch
+      | join(traits.out)
+      | join(ancestral.out)
+      | join(translate.out)
+      | map {n -> [n.drop(1)]}
+
+    tree_ch
+      | combine(met_ch)
+      | combine(node_data_ch)
       | combine(colors_ch) 
       | combine(lat_longs_ch) 
-      | combine(auspice_config_ch) 
+      | combine(auspice_config_ch)
       | export                // EXPORT
 }
