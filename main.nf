@@ -2,42 +2,54 @@
 
 nextflow.enable.dsl=2
 
-// == Import reusable modules
+// ===== MODULES ==============//
+// Import reusable and bespoke modules
 include { index; filter; align; tree; refine;
           ancestral; translate; traits; export } from './modules/augur.nf'
-// include any preprocessing modules, can add a flag for different viruses, can add default references for different viruses
+
+// This section could include but is not limited to:
+// 1) any bespoke modules for preprocessing data
+// 2) any fine-tuned flags for different viruses
+// 3) any specific default references for different viruses
+
+process get_versions {
+  publishDir "${params.outdir}", mode: 'copy'
+  output: path("versions.txt")
+  script:
+  """
+  #! /usr/bin/env bash
+  augur --version &> versions.txt
+  """
+}
 
 // ===== MAIN WORKFLOW ========//
 
 workflow {
-    // Define input channels (could auto detect if input is gisaid auspice json file)
-    // TODO: read in a fofn (file of file names, tsv) to run in parallel
-    seq_ch = Channel.fromPath(params.sequences, checkIfExists:true)
-    met_ch = Channel.fromPath(params.metadata, checkIfExists:true)
+    // Define input channels
+    sequences_ch = Channel.fromPath(params.sequences, checkIfExists:true)
+    metadata_ch = Channel.fromPath(params.metadata, checkIfExists:true)
     exclude_ch = Channel.fromPath(params.exclude, checkIfExists:true)
-    ref_ch = Channel.fromPath(params.reference, checkIfExists:true)
+    reference_ch = Channel.fromPath(params.reference, checkIfExists:true)
     colors_ch = Channel.fromPath(params.colors, checkIfExists:true)
     lat_longs_ch = Channel.fromPath(params.lat_longs, checkIfExists:true)
     auspice_config_ch = Channel.fromPath(params.auspice_config, checkIfExists:true)
 
-    // === Preprocessing could go here, scripts can go into the bin folder
-
     // Run pipeline (chain together processes and add other params on the way)
     channel.of("zika")
-      | combine(seq_ch)
+      | combine(sequences_ch)
       | index                 // INDEX
-      | combine(met_ch) 
+      | combine(metadata_ch) 
       | combine(exclude_ch) 
-      | combine(channel.of("--group-by country year month --sequences-per-group 20 --min-date 2012"))
+      | combine(channel.of(params.filter_args))
       | filter                // FILTER
-      | combine(ref_ch )
-      | combine(channel.of("--fill-gaps"))
+      | combine(reference_ch )
+      | combine(channel.of(params.align_args))
       | align                 // ALIGN
-      | combine(channel.of(""))
+      | combine(channel.of(params.tree_args))
       | tree                  // TREE
       | join(align.out) 
-      | combine(met_ch)
-      | combine(channel.of("--timetree --coalescent opt --date-confidence --date-inference marginal --clock-filter-iqd 4")) 
+      | combine(metadata_ch)
+      | combine(channel.of(params.refine_args)) 
       | refine                // REFINE
 
     // split augur refine's output into tree and branch length files
@@ -49,17 +61,17 @@ workflow {
 
     tree_ch 
       | join(align.out) 
-      | combine(channel.of("--inference joint"))
+      | combine(channel.of(params.ancestral_args))
       | ancestral             // ANCESTRAL
 
     tree_ch 
       | join(ancestral.out) 
-      | combine(ref_ch) 
+      | combine(reference_ch) 
       | translate             // TRANSLATE
 
     tree_ch 
-      | combine(met_ch) 
-      | combine(channel.of("--columns region country --confidence"))
+      | combine(metadata_ch) 
+      | combine(channel.of(params.traits_args))
       | traits                // TRAITS
 
     node_data_ch = branch_length_ch
@@ -69,7 +81,7 @@ workflow {
       | map {n -> [n.drop(1)]}
 
     tree_ch
-      | combine(met_ch)
+      | combine(metadata_ch)
       | combine(node_data_ch)
       | combine(colors_ch) 
       | combine(lat_longs_ch) 
