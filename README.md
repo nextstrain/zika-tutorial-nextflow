@@ -1,12 +1,14 @@
 # Nextstrain build for Zika virus tutorial
 
-This repository provides the data and scripts associated with the [Zika virus tutorial](https://nextstrain.org/docs/getting-started/zika-tutorial).
+This repository provides the data and scripts associated with the [Zika virus tutorial](https://nextstrain.org/docs/getting-started/zika-tutorial). See the [original Zika build repository](https://github.com/nextstrain/zika) for more about the public build.
 
-See the [original Zika build repository](https://github.com/nextstrain/zika) for more about the public build.
+This repo is a conversion of the standard Snakemake workflow into the [Nextflow](https://www.nextflow.io/) workflow language.
 
-This repo is a conversion of the standard Snakemake workflow into [Nextflow](https://www.nextflow.io/).
-
-As a potential joint effort, the [nf-core](https://nf-co.re/) community attempts to collect and curate nextflow analysis pipelines. Their slack channel is very active and provides insight on design decisions of the dsl. Their github provides a workflow template and github action linters.
+```
+git clone https://github.com/nextstrain/zika-tutorial-nextflow.git
+cd zika-tutorial-nextflow
+nextflow run main.nf
+```
 
 ## Demonstration
 
@@ -16,13 +18,17 @@ Augur commands were wrapped in processes (similar to Snakemake's rules) and plac
 sequence_ch 
  | index                   // INDEX
  | combine(metadata_ch) 
- | combine(exclude_ch) 
+ | combine(exclude_ch)
+ | combine(channel.of("--group-by country year month --sequences-per-group 20 --min-date 2012"))
  | filter                  // FILTER
  | combine(reference_ch ) 
+ | combine(channel.of("--fill-gaps"))
  | align                   // ALIGN
+ | combine(channel.of(""))
  | tree                    // TREE
  | combine(align.out) 
  | combine(metadata_ch) 
+ | combine(channel.of("--timetree --coalescent opt --date-confidence --date-inference marginal --clock-filter-iqd 4")) 
  | refine                  // REFINE
 ...
 ```
@@ -92,28 +98,3 @@ results/
 Based on Nextflow's timeline, the `refine` step seems to take the longest.
 
 ![](docs/timeline.png)
-
-Nextflow can generate a DAG of the pipeline, although Nextflow's isn't as easy to read as Snakemake's.
-
-<details><summary>See dag.png</summary>
-
-![](docs/dag.png)
-
-</details>
-
-<!--
-
-## Next steps
-
-There are probably many more complicated pre-processing steps in the Snakemake file, and other difficult use cases:
-
-* [ncov/workflow](https://github.com/nextstrain/ncov/tree/master/workflow)
-* [ncov/my_profiles](https://github.com/nextstrain/ncov/tree/master/my_profiles)
-
-Other tasks may include: 
-
-* Creating `profile` configurations for conda, docker, and aws.
-* Incorporating data pre-processing steps
-
-Other workflow languages include [WDL from the Broad Institute](https://github.com/broadinstitute/cromwell) which runs on Cromwell execution engine. A [WDL instance of the zika pipeline](https://github.com/nextstrain/zika-tutorial/tree/wdl) was created by huddlej.  
--->
