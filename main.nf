@@ -1,11 +1,18 @@
-#!/usr/bin/env nextflow
+#! /usr/bin/env nextflow
 
 nextflow.enable.dsl=2
 
 // ===== MODULES ==============//
 // Import reusable and bespoke modules
-include { index; filter; align; tree; refine;
-          ancestral; translate; traits; export } from './modules/augur.nf'
+include { index;
+          filter;
+          align;
+          tree;
+          refine;
+          ancestral;
+          translate;
+          traits;
+          export } from './modules/augur.nf'
 
 // This section could include but is not limited to:
 // 1) any bespoke modules for preprocessing data
