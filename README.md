@@ -10,6 +10,48 @@ cd zika-tutorial-nextflow
 nextflow run main.nf
 ```
 
+## Help Statement
+
+Assuming you have a working installation of [Nextflow](https://www.nextflow.io/docs/latest/getstarted.html)
+
+```
+nextflow run nextstrain/zika-tutorial-nextflow -r main --help
+```
+
+<details><summary>See help statement</summary>
+
+```
+N E X T F L O W  ~  version 21.10.6
+Launching `main.nf` [tiny_jepsen] - revision: 3efe125160
+
+  Usage:
+   The typical command for running the pipeline are as follows:
+   nextflow run nextflow/zika-tutorial-nextflow -r main -profile docker
+   
+   Input Files:
+   --sequences                        Sequences fasta [default: 'false']
+   --metadata                         Metadata tsv file [default: 'false']
+   --exclude                          List of excluded sequences file [default: 'false']
+   --reference                        Reference genbank file [default: 'false']
+   --colors                           Colors tsv file [default: 'false']
+   --lat_longs                        Latitude and longituide file [default: 'false']
+   --auspice_config                   Auspice config file [default: 'false']
+   Optional augur arguments
+   --filter_args                      Parameters passed to filter [default: '--group-by country year month --sequences-per-group 20 --min-date 2012']
+   --align_args                       Parameters passed to filter [default: '--group-by country year month --sequences-per-group 20 --min-date 2012']
+   --tree_args                        Parameters passed to filter [default: '--group-by country year month --sequences-per-group 20 --min-date 2012']
+   --refine_args                      Parameters passed to filter [default: '--group-by country year month --sequences-per-group 20 --min-date 2012']
+   --ancestral_args                   Parameters passed to filter [default: '--group-by country year month --sequences-per-group 20 --min-date 2012']
+   --traits_args                      Parameters passed to filter [default: '--group-by country year month --sequences-per-group 20 --min-date 2012']
+   Optional arguments:
+   --augur_app                        Augur executable [default: 'augur']
+   --outdir                           Output directory to place final output [default: 'results']
+   --help                             This usage statement.
+   --check_software                   Check if software dependencies are available.
+```
+
+</details>
+
 ## Demonstration
 
 Augur commands were wrapped in processes (similar to Snakemake's rules) and placed in the `modules/augur.nf`. Nextflow processes were imported into `main.nf` and connected via Nextflow channels.
