@@ -1,16 +1,58 @@
-#!/usr/bin/env nextflow
+#! /usr/bin/env nextflow
 
 nextflow.enable.dsl=2
 
 // ===== MODULES ==============//
 // Import reusable and bespoke modules
-include { index; filter; align; tree; refine;
-          ancestral; translate; traits; export } from './modules/augur.nf'
+include { index;
+          filter;
+          align;
+          tree;
+          refine;
+          ancestral;
+          translate;
+          traits;
+          export } from './modules/augur.nf'
 
 // This section could include but is not limited to:
 // 1) any bespoke modules for preprocessing data
 // 2) any fine-tuned flags for different viruses
 // 3) any specific default references for different viruses
+
+// Define functions
+def helpMessage() {
+  log.info """
+  Usage:
+   The typical command for running the pipeline are as follows:
+   nextflow run nextflow/zika-tutorial-nextflow -r main -profile docker
+   
+   Input Files:
+   --sequences                        Sequences fasta [default: '$params.sequences']
+   --metadata                         Metadata tsv file [default: '$params.metadata']
+   --exclude                          List of excluded sequences file [default: '$params.exclude']
+   --reference                        Reference genbank file [default: '$params.reference']
+   --colors                           Colors tsv file [default: '$params.lat_longs']
+   --lat_longs                        Latitude and longituide file [default: '$params.lat_longs']
+   --auspice_config                   Auspice config file [default: '$params.auspice_config']
+   Optional augur arguments
+   --filter_args                      Parameters passed to filter [default: '$params.filter_args']
+   --align_args                       Parameters passed to align [default: '$params.align_args']
+   --tree_args                        Parameters passed to tree [default: '$params.tree_args']
+   --refine_args                      Parameters passed to refine [default: '$params.refine_args']
+   --ancestral_args                   Parameters passed to ancestral [default: '$params.ancestral_args']
+   --traits_args                      Parameters passed to traits [default: '$params.traits_args']
+   Optional arguments:
+   --augur_app                        Augur executable [default: '$params.augur_app']
+   --outdir                           Output directory to place final output [default: '$params.outdir']
+   --help                             This usage statement.
+   --check_software                   Check if software dependencies are available.
+  """
+}
+
+if ( params.help) {
+  helpMessage()
+  exit 0
+}
 
 process get_versions {
   publishDir "${params.outdir}", mode: 'copy'
@@ -63,12 +105,19 @@ workflow {
   // Define Input channels
   fetch_zika_tutorial()
   sequences_ch = setDefaultIfNotDefined(params.sequences, fetch_zika_tutorial.out, 0)
+    | view { "sequences: $it"}
   metadata_ch = setDefaultIfNotDefined(params.metadata, fetch_zika_tutorial.out, 1)
+    | view { "metadata: $it"}
   exclude_ch = setDefaultIfNotDefined(params.exclude, fetch_zika_tutorial.out, 5)
+    | view { "exclude: $it"}
   reference_ch = setDefaultIfNotDefined(params.reference, fetch_zika_tutorial.out, 6)
+    | view { "reference: $it"}
   colors_ch = setDefaultIfNotDefined(params.colors, fetch_zika_tutorial.out, 3)
+    | view { "colors: $it"}
   lat_longs_ch = setDefaultIfNotDefined(params.lat_longs, fetch_zika_tutorial.out, 4)
+    | view { "lat longs: $it"}
   auspice_config_ch = setDefaultIfNotDefined(params.auspice_config, fetch_zika_tutorial.out, 2)
+    | view { "auspice config: $it"}
 
   // Run pipeline (chain together processes and add other params on the way)
   channel.of("zika")
