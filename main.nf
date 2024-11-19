@@ -73,21 +73,21 @@ process fetch_zika_tutorial {
   #! /usr/bin/env bash
 
   # pull data
-  wget https://raw.githubusercontent.com/nextstrain/zika-tutorial/master/data/sequences.fasta
+  wget https://raw.githubusercontent.com/nextstrain/zika-tutorial/@/data/sequences.fasta
   sleep 0.5
-  wget https://raw.githubusercontent.com/nextstrain/zika-tutorial/master/data/metadata.tsv
+  wget https://raw.githubusercontent.com/nextstrain/zika-tutorial/@/data/metadata.tsv
   sleep 0.5
   
   # pull default configs
-  wget https://raw.githubusercontent.com/nextstrain/zika-tutorial/master/config/auspice_config.json
+  wget https://raw.githubusercontent.com/nextstrain/zika-tutorial/@/config/auspice_config.json
   sleep 0.5
-  wget https://raw.githubusercontent.com/nextstrain/zika-tutorial/master/config/colors.tsv
+  wget https://raw.githubusercontent.com/nextstrain/zika-tutorial/@/config/colors.tsv
   sleep 0.5
-  wget https://raw.githubusercontent.com/nextstrain/zika-tutorial/master/config/dropped_strains.txt
+  wget https://raw.githubusercontent.com/nextstrain/zika-tutorial/@/config/dropped_strains.txt
   sleep 0.5
-  wget https://raw.githubusercontent.com/nextstrain/zika-tutorial/master/config/lat_longs.tsv
+  wget https://raw.githubusercontent.com/nextstrain/zika-tutorial/@/config/lat_longs.tsv
   sleep 0.5
-  wget https://raw.githubusercontent.com/nextstrain/zika-tutorial/master/config/zika_outgroup.gb
+  wget https://raw.githubusercontent.com/nextstrain/zika-tutorial/@/config/zika_outgroup.gb
   """
 }
 
